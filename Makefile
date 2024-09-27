@@ -1,31 +1,17 @@
-OBJS += cptc.o
-OBJS += main.o
-OBJS += requestHandler.o
-OBJS += downloadAvatar.o
-OBJS += root.o
+CC       = gcc
+CFLAGS   = -Wall -std=c99 -g -O0
+LDFLAGS  =
+CPPFLAGS = -I include
 
-CFLAGS += $(shell curl-config --cflags)
-CFLAGS += -std=c11
+SOURCES = src/main.c src/http.c
+OBJECTS = $(SOURCES:.c=.o)
 
-LDFLAGS += $(shell curl-config --libs)
-LDFLAGS += -lcpetpet
-RM = rm -f
+.PHONY: all
+all: main
 
-all: cptc
-
-utils/%:
-	make -C utils
-
-root.c: utils/convert README
-	echo "const char *CPTC_root = \"$$(cat README | utils/convert)\";" > $@
-
-cptc: $(OBJS)
-	$(CC) -o $@ $^ $(LDFLAGS)
-
+.PHONY: clean
 clean:
-	$(RM) cptc *.o
-	make -C utils clean
+	rm -f $(OBJECTS) main
 
-cptc: $(OBJS)
-
-.PHONY: all clean
+main: $(OBJECTS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)

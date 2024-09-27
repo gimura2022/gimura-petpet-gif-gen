@@ -1,5 +1,2 @@
-compile_flags.txt
 *.o
-cptc
-root.c
-utils/convert
+compile_commands.json
