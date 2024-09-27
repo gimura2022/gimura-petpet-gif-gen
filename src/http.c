@@ -4,6 +4,7 @@
 #include <pthread.h>
 #include <regex.h>
 
+#include <string.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <sys/types.h>
@@ -49,7 +50,23 @@ void http_start_server(const char* ip, const uint16_t port, http_hendler_t hendl
 	}
 }
 
-#define BUFFER_SIZE 1024
+void http_send_data(const int client_fd, const char* type, uint8_t* data, size_t data_size) {
+	char* responce = (char*) malloc(BUFFER_SIZE * sizeof(char));
+	size_t responce_size = 0;
+
+	snprintf(responce, BUFFER_SIZE,
+			"HTTP/1.1 200 OK\r\n"
+			"Content-Type: %s\r\n"
+			"\n\r", type);
+	memcpy(responce + strlen(responce) / sizeof(char), data, data_size); 
+
+	responce_size += strlen(responce);
+	responce_size += data_size;
+
+	send(client_fd, responce, responce_size, 0);
+
+	free(responce);
+}
 
 static void* http_rec(void* args) {
 	http_rec_args_t* args_struct = (http_rec_args_t*) args;
@@ -65,7 +82,7 @@ static void* http_rec(void* args) {
 
 	if (regexec(&regex, buf, 2, matches, 0) == 0) {
 		buf[matches[1].rm_eo] = '\0';
-		args_struct->hendler(buf);
+		args_struct->hendler(buf, args_struct->client_fd);
 	}
 
 	regfree(&regex);
