@@ -81,6 +81,8 @@ static void hendler(char* buf, int client_fd) {
 		goto fail;
 	}
 
+	return;
+
 fail:
 	http_send_error(client_fd);
 }

@@ -57,15 +57,15 @@ void http_start_server(const char* ip, const uint16_t port, http_hendler_t hendl
 
 void http_send_data(const int client_fd, const char* type, uint8_t* data, size_t data_size) {
 	char* responce = (char*) malloc(BUFFER_SIZE * sizeof(char));
+	memset(responce, 0, BUFFER_SIZE * sizeof(char));
 	size_t responce_size = 0;
 
-	snprintf(responce, BUFFER_SIZE,
-			"HTTP/1.1 200 OK\r\n"
-			"Content-Type: %s\r\n"
-			"\n\r", type);
-	memcpy(responce + strlen(responce) / sizeof(char), data, data_size); 
-
+	sprintf(responce, "HTTP/1.0 200 OK\r\n");
+	sprintf(responce + strlen(responce), "Content-Type: %s\r\n", type);
+	sprintf(responce + strlen(responce), "\r\n");	
 	responce_size += strlen(responce);
+
+	memcpy(responce + strlen(responce), data, data_size); 
 	responce_size += data_size;
 
 	send(client_fd, responce, responce_size, 0);
@@ -77,9 +77,8 @@ void http_send_error(const int client_fd) {
 	char* responce = (char*) malloc(BUFFER_SIZE * sizeof(char));
 	size_t responce_size = 0;
 
-	snprintf(responce, BUFFER_SIZE,
-		    "HTTP/1.1 500 Internal server error\r\n"
-			"\r\n");
+	sprintf(responce, "HTTP/1.0 500 Internal server error\r\n");
+	sprintf(responce + strlen(responce), "\r\n");
 	responce_size += strlen(responce);	
 
 	send(client_fd, responce, responce_size, 0);
