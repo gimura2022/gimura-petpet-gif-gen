@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -23,7 +24,11 @@ typedef struct {
 
 static void* http_rec(void* args);
 
+bool http_runned = true;
+
 void http_start_server(const char* ip, const uint16_t port, http_hendler_t hendler) {
+	printf("stating http server in port %u\n", port);
+
 	int                server_fd;
 	struct sockaddr_in address;
 
@@ -36,7 +41,7 @@ void http_start_server(const char* ip, const uint16_t port, http_hendler_t hendl
 	if (bind(server_fd, (struct sockaddr*) &address, sizeof(address)) < 0) error("bind failed", EXIT_FAILURE);
 	if (listen(server_fd, 3) < 0)                                                  error("listen failed", EXIT_FAILURE);
 
-	while (1) {
+	while (http_runned) {
 		struct sockaddr_in client_addr;
 		socklen_t          client_addr_len = sizeof(client_addr);
 		http_rec_args_t*   http_rec_args   = malloc(sizeof(http_rec_args_t));
@@ -62,6 +67,20 @@ void http_send_data(const int client_fd, const char* type, uint8_t* data, size_t
 
 	responce_size += strlen(responce);
 	responce_size += data_size;
+
+	send(client_fd, responce, responce_size, 0);
+
+	free(responce);
+}
+
+void http_send_error(const int client_fd) {
+	char* responce = (char*) malloc(BUFFER_SIZE * sizeof(char));
+	size_t responce_size = 0;
+
+	snprintf(responce, BUFFER_SIZE,
+		    "HTTP/1.1 500 Internal server error\r\n"
+			"\r\n");
+	responce_size += strlen(responce);	
 
 	send(client_fd, responce, responce_size, 0);
 
